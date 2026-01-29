@@ -19,6 +19,31 @@ Features:
 - 📋 Real-time operation logs
 - ✨ Modern dark theme UI built with PySide6
 
+### Tech Stack
+
+| Component     | Technology                |
+| ------------- | ------------------------- |
+| GUI Framework | PySide6 (Qt for Python)   |
+| UI Theme      | Catppuccin Mocha (Dark)   |
+| Packaging     | Nuitka (Single-file .exe) |
+
+### Build Executable (Windows)
+
+To build a standalone `.exe` file using Nuitka:
+
+```bash
+# Run the build script
+build.bat
+```
+
+Or manually:
+
+```bash
+uv run python -m nuitka --standalone --onefile --windows-console-mode=disable --enable-plugin=pyside6 --output-filename=EnableChromeAI.exe --output-dir=dist main_gui.py
+```
+
+The executable will be created in the `dist/` folder.
+
 > **Note:** Run `uv sync` first if you haven't installed the dependencies.
 
 <img width="512" alt="Google Chrome Gemini in Chrome" src="https://github.com/user-attachments/assets/a88c56a7-f20b-432a-926c-0184194225b4" />

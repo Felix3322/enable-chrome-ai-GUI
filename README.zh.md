@@ -19,6 +19,31 @@ uv run main_gui.py
 - 📋 实时操作日志
 - ✨ 基于 PySide6 的现代暗色主题界面
 
+### 技术栈
+
+| 组件     | 技术                     |
+| -------- | ------------------------ |
+| GUI 框架 | PySide6 (Qt for Python)  |
+| UI 主题  | Catppuccin Mocha（暗色） |
+| 打包工具 | Nuitka（单文件 .exe）    |
+
+### 构建可执行文件（Windows）
+
+使用 Nuitka 构建独立的 `.exe` 文件：
+
+```bash
+# 运行构建脚本
+build.bat
+```
+
+或手动执行：
+
+```bash
+uv run python -m nuitka --standalone --onefile --windows-console-mode=disable --enable-plugin=pyside6 --output-filename=EnableChromeAI.exe --output-dir=dist main_gui.py
+```
+
+可执行文件将生成在 `dist/` 文件夹中。
+
 > **注意：** 如果尚未安装依赖，请先运行 `uv sync`。
 
 <img width="512" alt="Google Chrome Gemini in Chrome" src="https://github.com/user-attachments/assets/a88c56a7-f20b-432a-926c-0184194225b4" />
