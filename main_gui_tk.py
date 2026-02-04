@@ -58,7 +58,7 @@ def set_all_is_glic_eligible(obj):
 def patch_local_state(user_data_path, last_version, log_func):
     local_state_file = os.path.join(user_data_path, 'Local State')
     if not os.path.exists(local_state_file):
-        log_func(f"  ⚠️ Local State 文件不存在")
+        log_func(f"  ⚠️ Local State file not found")
         return
 
     with open(local_state_file, 'r', encoding='utf-8') as fp:
@@ -69,13 +69,13 @@ def patch_local_state(user_data_path, last_version, log_func):
     # 1. Set all is_glic_eligible to true (recursive)
     if set_all_is_glic_eligible(local_state):
         modified = True
-        log_func("  ✓ 已修补 is_glic_eligible")
+        log_func("  ✓ Patched is_glic_eligible")
 
     # 2. Set variations_country to "us" (root level)
     if local_state.get('variations_country') != 'us':
         local_state['variations_country'] = 'us'
         modified = True
-        log_func("  ✓ 已修补 variations_country")
+        log_func("  ✓ Patched variations_country")
 
     # 3. Set variations_permanent_consistency_country
     if 'variations_permanent_consistency_country' in local_state:
@@ -86,14 +86,14 @@ def patch_local_state(user_data_path, last_version, log_func):
                 local_state['variations_permanent_consistency_country'][0] = last_version
                 local_state['variations_permanent_consistency_country'][1] = 'us'
                 modified = True
-                log_func("  ✓ 已修补 variations_permanent_consistency_country")
+                log_func("  ✓ Patched variations_permanent_consistency_country")
 
     if modified:
         with open(local_state_file, 'w', encoding='utf-8') as fp:
             json.dump(local_state, fp)
-        log_func("  ✅ Local State 修补成功")
+        log_func("  ✅ Local State patched successfully")
     else:
-        log_func("  ℹ️ 无需修补（已是最新状态）")
+        log_func("  ℹ️ No patching needed (already up to date)")
 
 # --- Worker Logic ---
 
@@ -106,7 +106,7 @@ def run_patch_process(msg_queue, version_and_user_data_path):
         msg_queue.put(('progress', 10))
         terminated_chromes = shutdown_chrome()
         if len(terminated_chromes) > 0:
-            log("✅ 已关闭 Chrome 浏览器")
+            log("✅ Chrome browser closed")
 
         # Step 2: Patch each version
         total = len(version_and_user_data_path)
@@ -116,24 +116,24 @@ def run_patch_process(msg_queue, version_and_user_data_path):
 
             last_version = get_last_version(user_data_path)
             if last_version is None:
-                log(f"⚠️ Chrome {version}: 无法获取版本信息")
+                log(f"⚠️ Chrome {version}: Unable to get version info")
                 continue
 
-            log(f"🔧 正在修补 Chrome {version} ({last_version})")
+            log(f"🔧 Patching Chrome {version} ({last_version})")
             patch_local_state(user_data_path, last_version, log)
 
         # Step 3: Restart Chrome
         msg_queue.put(('progress', 90))
         if len(terminated_chromes) > 0:
-            log("🚀 正在重启 Chrome...")
+            log("🚀 Restarting Chrome...")
             for chrome in terminated_chromes:
                 subprocess.Popen([chrome], stderr=subprocess.DEVNULL)
-            log("✅ Chrome 已重启")
+            log("✅ Chrome restarted")
 
         msg_queue.put(('progress', 100))
-        msg_queue.put(('finished', (True, "🎉 所有操作已完成！Chrome AI 功能已启用。")))
+        msg_queue.put(('finished', (True, "🎉 All operations completed! Chrome AI features enabled.")))
     except Exception as e:
-        msg_queue.put(('finished', (False, f"❌ 发生错误: {str(e)}")))
+        msg_queue.put(('finished', (False, f"❌ Error occurred: {str(e)}")))
 
 # --- GUI ---
 
@@ -167,13 +167,13 @@ class MainWindow(tk.Tk):
         title_label.pack(pady=(0, 5))
 
         # Description
-        desc_label = tk.Label(main_frame, text="一键启用 Chrome 内置 AI 功能：Gemini、AI 历史搜索、DevTools AI 等",
+        desc_label = tk.Label(main_frame, text="One-click Enable Chrome AI: Gemini, AI History Search, DevTools AI, etc.",
                               font=("Segoe UI", 11),
                               bg="#1e1e2e", fg="#bac2de")
         desc_label.pack(pady=(0, 15))
 
         # Chrome versions group
-        chrome_group = tk.LabelFrame(main_frame, text="检测到的 Chrome 版本",
+        chrome_group = tk.LabelFrame(main_frame, text="Detected Chrome Versions",
                                      bg="#1e1e2e", fg="#cdd6f4",
                                      font=("Segoe UI", 9, "bold"),
                                      bd=1, relief="solid")
@@ -189,15 +189,9 @@ class MainWindow(tk.Tk):
 
         # Progress bar
         self.progress_bar = ttk.Progressbar(main_frame, style="TProgressbar", orient="horizontal", mode="determinate", length=100)
-        # Hidden initially by not packing, or packing with 0 height?
-        # Tkinter widgets are hard to "hide" without removing from layout.
-        # We will pack it but maybe keep it hidden or just show empty.
-        # Let's pack it but manage visibility or just let it be empty.
-        # The original had setVisible(False). We can use pack_forget().
 
         # Action button
-        # Using tk.Button for better color control on standard themes
-        self.patch_btn = tk.Button(main_frame, text="🚀 一键启用 Chrome AI",
+        self.patch_btn = tk.Button(main_frame, text="🚀 Enable Chrome AI",
                                    command=self.start_patch,
                                    bg="#89b4fa", fg="#1e1e2e",
                                    activebackground="#b4befe", activeforeground="#1e1e2e",
@@ -206,7 +200,7 @@ class MainWindow(tk.Tk):
         self.patch_btn.pack(pady=10)
 
         # Log output group
-        log_group = tk.LabelFrame(main_frame, text="操作日志",
+        log_group = tk.LabelFrame(main_frame, text="Operation Logs",
                                   bg="#1e1e2e", fg="#cdd6f4",
                                   font=("Segoe UI", 9, "bold"),
                                   bd=1, relief="solid")
@@ -256,11 +250,11 @@ class MainWindow(tk.Tk):
                 break
 
         if not found:
-            self.chrome_list.insert(tk.END, "❌ 未检测到已安装的 Chrome")
+            self.chrome_list.insert(tk.END, "❌ No installed Chrome detected")
             self.patch_btn.config(state=tk.DISABLED, bg="#45475a", fg="#6c7086")
-            self.log("⚠️ 未检测到已安装的 Chrome 浏览器")
+            self.log("⚠️ No installed Chrome browser detected")
         else:
-            self.log(f"✅ 检测到 {len(self.version_and_user_data_path)} 个 Chrome 版本")
+            self.log(f"✅ Detected {len(self.version_and_user_data_path)} Chrome versions")
 
     def log(self, message):
         """Append message to log."""
@@ -280,7 +274,7 @@ class MainWindow(tk.Tk):
         self.log_text.config(state=tk.NORMAL)
         self.log_text.delete(1.0, tk.END)
         self.log_text.config(state=tk.DISABLED)
-        self.log("🔄 开始执行修补操作...")
+        self.log("🔄 Starting patch operation...")
 
         thread = threading.Thread(target=run_patch_process, args=(self.msg_queue, self.version_and_user_data_path))
         thread.start()
@@ -310,9 +304,9 @@ class MainWindow(tk.Tk):
         self.log(message)
 
         if success:
-            messagebox.showinfo("完成", message)
+            messagebox.showinfo("Done", message)
         else:
-            messagebox.showwarning("错误", message)
+            messagebox.showwarning("Error", message)
 
 def main():
     app = MainWindow()

@@ -32,34 +32,34 @@ class PatchWorker(QThread):
             self.progress_signal.emit(10)
             self.terminated_chromes = self.shutdown_chrome()
             if len(self.terminated_chromes) > 0:
-                self.log("✅ 已关闭 Chrome 浏览器")
+                self.log("✅ Chrome browser closed")
 
             # Step 2: Patch each version
             total = len(self.version_and_user_data_path)
             for i, (version, user_data_path) in enumerate(self.version_and_user_data_path.items()):
                 progress = 20 + int(60 * (i + 1) / total)
                 self.progress_signal.emit(progress)
-                
+
                 last_version = self.get_last_version(user_data_path)
                 if last_version is None:
-                    self.log(f"⚠️ Chrome {version}: 无法获取版本信息")
+                    self.log(f"⚠️ Chrome {version}: Unable to get version info")
                     continue
-                
-                self.log(f"🔧 正在修补 Chrome {version} ({last_version})")
+
+                self.log(f"🔧 Patching Chrome {version} ({last_version})")
                 self.patch_local_state(user_data_path, last_version)
 
             # Step 3: Restart Chrome
             self.progress_signal.emit(90)
             if len(self.terminated_chromes) > 0:
-                self.log("🚀 正在重启 Chrome...")
+                self.log("🚀 Restarting Chrome...")
                 for chrome in self.terminated_chromes:
                     subprocess.Popen([chrome], stderr=subprocess.DEVNULL)
-                self.log("✅ Chrome 已重启")
+                self.log("✅ Chrome restarted")
 
             self.progress_signal.emit(100)
-            self.finished_signal.emit(True, "🎉 所有操作已完成！Chrome AI 功能已启用。")
+            self.finished_signal.emit(True, "🎉 All operations completed! Chrome AI features enabled.")
         except Exception as e:
-            self.finished_signal.emit(False, f"❌ 发生错误: {str(e)}")
+            self.finished_signal.emit(False, f"❌ Error occurred: {str(e)}")
 
     def shutdown_chrome(self):
         terminated_chromes = set()
@@ -109,7 +109,7 @@ class PatchWorker(QThread):
     def patch_local_state(self, user_data_path, last_version):
         local_state_file = os.path.join(user_data_path, 'Local State')
         if not os.path.exists(local_state_file):
-            self.log(f"  ⚠️ Local State 文件不存在")
+            self.log(f"  ⚠️ Local State file not found")
             return
 
         with open(local_state_file, 'r', encoding='utf-8') as fp:
@@ -120,13 +120,13 @@ class PatchWorker(QThread):
         # 1. Set all is_glic_eligible to true (recursive)
         if self.set_all_is_glic_eligible(local_state):
             modified = True
-            self.log("  ✓ 已修补 is_glic_eligible")
+            self.log("  ✓ Patched is_glic_eligible")
 
         # 2. Set variations_country to "us" (root level)
         if local_state.get('variations_country') != 'us':
             local_state['variations_country'] = 'us'
             modified = True
-            self.log("  ✓ 已修补 variations_country")
+            self.log("  ✓ Patched variations_country")
 
         # 3. Set variations_permanent_consistency_country
         if 'variations_permanent_consistency_country' in local_state:
@@ -137,14 +137,14 @@ class PatchWorker(QThread):
                     local_state['variations_permanent_consistency_country'][0] = last_version
                     local_state['variations_permanent_consistency_country'][1] = 'us'
                     modified = True
-                    self.log("  ✓ 已修补 variations_permanent_consistency_country")
+                    self.log("  ✓ Patched variations_permanent_consistency_country")
 
         if modified:
             with open(local_state_file, 'w', encoding='utf-8') as fp:
                 json.dump(local_state, fp)
-            self.log("  ✅ Local State 修补成功")
+            self.log("  ✅ Local State patched successfully")
         else:
-            self.log("  ℹ️ 无需修补（已是最新状态）")
+            self.log("  ℹ️ No patching needed (already up to date)")
 
 
 class MainWindow(QMainWindow):
@@ -244,14 +244,14 @@ class MainWindow(QMainWindow):
         layout.addWidget(title_label)
 
         # Description
-        desc_label = QLabel("一键启用 Chrome 内置 AI 功能：Gemini、AI 历史搜索、DevTools AI 等")
+        desc_label = QLabel("One-click Enable Chrome AI: Gemini, AI History Search, DevTools AI, etc.")
         desc_label.setFont(QFont("Segoe UI", 11))
         desc_label.setStyleSheet("color: #bac2de;")
         desc_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(desc_label)
 
         # Chrome versions group
-        chrome_group = QGroupBox("检测到的 Chrome 版本")
+        chrome_group = QGroupBox("Detected Chrome Versions")
         chrome_layout = QVBoxLayout(chrome_group)
         self.chrome_list = QListWidget()
         self.chrome_list.setMinimumHeight(100)
@@ -264,14 +264,14 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.progress_bar)
 
         # Action button
-        self.patch_btn = QPushButton("🚀 一键启用 Chrome AI")
+        self.patch_btn = QPushButton("🚀 Enable Chrome AI")
         self.patch_btn.setFont(QFont("Segoe UI", 12, QFont.Bold))
         self.patch_btn.setCursor(Qt.PointingHandCursor)
         self.patch_btn.clicked.connect(self.start_patch)
         layout.addWidget(self.patch_btn)
 
         # Log output group
-        log_group = QGroupBox("操作日志")
+        log_group = QGroupBox("Operation Logs")
         log_layout = QVBoxLayout(log_group)
         self.log_text = QTextEdit()
         self.log_text.setReadOnly(True)
@@ -317,11 +317,11 @@ class MainWindow(QMainWindow):
                 break
 
         if len(self.version_and_user_data_path) == 0:
-            self.chrome_list.addItem("❌ 未检测到已安装的 Chrome")
+            self.chrome_list.addItem("❌ No installed Chrome detected")
             self.patch_btn.setEnabled(False)
-            self.log("⚠️ 未检测到已安装的 Chrome 浏览器")
+            self.log("⚠️ No installed Chrome browser detected")
         else:
-            self.log(f"✅ 检测到 {len(self.version_and_user_data_path)} 个 Chrome 版本")
+            self.log(f"✅ Detected {len(self.version_and_user_data_path)} Chrome versions")
 
     def log(self, message):
         """Append message to log."""
@@ -333,7 +333,7 @@ class MainWindow(QMainWindow):
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
         self.log_text.clear()
-        self.log("🔄 开始执行修补操作...")
+        self.log("🔄 Starting patch operation...")
 
         self.worker = PatchWorker(self.version_and_user_data_path)
         self.worker.log_signal.connect(self.log)
@@ -345,7 +345,7 @@ class MainWindow(QMainWindow):
         """Handle patch completion."""
         self.patch_btn.setEnabled(True)
         self.log(message)
-        
+
         # Create message box with light theme for better readability
         msg_box = QMessageBox(self)
         msg_box.setStyleSheet("""
@@ -369,26 +369,26 @@ class MainWindow(QMainWindow):
                 background-color: #b4befe;
             }
         """)
-        
+
         if success:
-            msg_box.setWindowTitle("完成")
+            msg_box.setWindowTitle("Done")
             msg_box.setIcon(QMessageBox.Information)
             msg_box.setText(message)
         else:
-            msg_box.setWindowTitle("错误")
+            msg_box.setWindowTitle("Error")
             msg_box.setIcon(QMessageBox.Warning)
             msg_box.setText(message)
-        
+
         msg_box.exec()
 
 
 def main():
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
-    
+
     window = MainWindow()
     window.show()
-    
+
     sys.exit(app.exec())
 
 
